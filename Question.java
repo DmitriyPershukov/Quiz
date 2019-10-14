@@ -50,21 +50,6 @@ public class Question
             throw new Exception("Format of question file is wrong");
         }
     }
-
-
-    public static questionType stringConvertQuestionType(String label) throws Exception {
-        switch (label)
-        {
-            case "maq":
-                return questionType.multipleAnswerQuestion;
-            case "oaq":
-                return questionType.oneAnswerQuestion;
-            case "faq":
-                return questionType.freeAnswerQuestion;
-            default:
-                throw new Exception("Format of question file is wrong");
-        }
-    }
 }
 
 class OneAnswerQuestion extends Question
