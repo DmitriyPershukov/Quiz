@@ -2,6 +2,7 @@ package com.company;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.security.SignatureException;
 
 import static org.junit.Assert.*;

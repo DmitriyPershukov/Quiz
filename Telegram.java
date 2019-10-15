@@ -11,12 +11,14 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.HashMap;
 
 public class Telegram extends TelegramLongPollingBot {
+    private static Dialogue dialogue;
     private static HashMap<String, Dialogue> chats;
 
     public static void init() throws Exception {
         ApiContextInitializer.init();
         chats = new HashMap<String, Dialogue>();
         TelegramBotsApi botApi = new TelegramBotsApi();
+        //dialogue = new Dialogue();
         try {
             botApi.registerBot(new Telegram());
         } catch (TelegramApiException e) {
@@ -25,7 +27,7 @@ public class Telegram extends TelegramLongPollingBot {
     }
 
     @Override
-    public synchronized void onUpdateReceived(Update update) {
+    public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
         String user = message.getFrom().toString();
         if (!chats.containsKey(user)) {
@@ -59,11 +61,11 @@ public class Telegram extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return LocalConfig.botName;
+        return Config.botName;
     }
 
     @Override
     public String getBotToken() {
-        return LocalConfig.botToken;
+        return Config.botToken;
     }
 }
