@@ -47,43 +47,43 @@ public class Dialogue
         quiz.modifyQuestionsList(Config.path);
         commandsList.put("help", new CommandWithoutInput("выводит список команд") {
             @Override
-            public String process(String[] args) {
+            public String process() {
                 return help();
             }
         });
         commandsList.put("questionPlease", new CommandWithoutInput("задает новый вопрос") {
             @Override
-            public String process(String[] args) {
+            public String process() {
                 return getNewQuestion();
             }
         });
         commandsList.put("restart", new CommandWithoutInput("начинает новую игру") {
             @Override
-            public String process(String[] args) {
+            public String process() {
                 return restart();
             }
         });
         commandsList.put("shuffleQuestions", new CommandWithoutInput("перемешивает вопросы") {
             @Override
-            public String process(String[] args) {
+            public String process() {
                 return shuffleQuestions();
             }
         });
         commandsList.put("closeProgramm", new CommandWithoutInput("закрывает программу") {
             @Override
-            public String process(String[] args) {
+            public String process() {
                 return close();
             }
         });
         commandsList.put("getScore", new CommandWithoutInput("печатает результат") {
             @Override
-            public String process(String[] args) {
+            public String process() {
                 return getScore();
             }
         });
         commandsList.put("repeatQuestion", new CommandWithoutInput("повторяет текущий вопрос") {
             @Override
-            public String process(String[] args) {
+            public String process() {
                 return repeatQuestion();
             }
         });
@@ -192,7 +192,6 @@ abstract class Command
     {
         this.description = description;
     }
-    public abstract String process(String[] args) throws Exception;
 
     public abstract String startProcess(String[] args) throws Exception;
 
@@ -205,6 +204,7 @@ abstract class Command
 
 abstract class CommandWithoutInput extends Command
 {
+    protected abstract String process() throws Exception;
     CommandWithoutInput(String description)
     {
         super(description);
@@ -216,12 +216,13 @@ abstract class CommandWithoutInput extends Command
         if (args != null) {
             throw new Exception("Эта команда аргумента не имеет");
         }
-        return process(args);
+        return process();
     }
 }
 
 abstract class CommandWithInput extends Command
 {
+    protected abstract String process(String[] args) throws Exception;
     CommandWithInput(String description)
     {
         super(description);

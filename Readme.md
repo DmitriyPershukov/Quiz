@@ -1,2 +1,2 @@
-change command class
-chamge enum questionType
+реализовать в telegram синхрониция
+убрать config из репозитория

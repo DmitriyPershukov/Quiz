@@ -1,5 +1,6 @@
 package com.company;
 
+import javax.ws.rs.NotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.SignatureException;
@@ -43,6 +44,7 @@ public class Quiz
         }
         catch (SignatureException t)
         {
+            askedQuestionsNumber--;
             quizWantsAnswer = true;
             return "Неправильный формат ответа !!";
         }
@@ -127,6 +129,10 @@ public class Quiz
                     newQuestion.setQuestion(questionsSource.get(i));
                     questionsList.add(newQuestion);
                     break;
+                case multipleAnswerQuestion:
+                    throw new NotSupportedException();
+                case freeAnswerQuestion:
+                    throw new NotSupportedException();
                 default:
                     throw new Exception("Format of question file is wrong");
             };
