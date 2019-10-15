@@ -117,7 +117,7 @@ public class Quiz
 
     public void modifyQuestionsList(String path) throws Exception
     {
-        String text = Files.readString(Paths.get(Config.path));
+        String text = Files.readString(Paths.get(path));
         String[] questionsText = text.split("\r\n");
         List<String[]> questionsSource = splitByMarks(questionsText, new String[]{"oaq","maq","faq"});
         for(int i = 0; i < questionsSource.size(); i++)
