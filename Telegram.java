@@ -61,11 +61,11 @@ public class Telegram extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return Config.botName;
+        return LocalConfig.botName;
     }
 
     @Override
     public String getBotToken() {
-        return Config.botToken;
+        return LocalConfig.botToken;
     }
 }
