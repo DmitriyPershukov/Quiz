@@ -1,6 +1,8 @@
 package com.company;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Dialogue
@@ -8,38 +10,52 @@ public class Dialogue
     private static Map<String, Command> commandsList = new HashMap<>();
     private Quiz quiz = new Quiz();
 
-    String returnQuizAnswer(String input)
+    String[] parseInput(String input)
     {
-        String output = "";
-        if(input.length() >= 1 && input.substring(0,1).equals("&")) {
-            String newInput = input.substring(2);
-            String commandName = newInput.split(" ")[0];
-            String[] commandInput = null;
-            if (newInput.split(" ").length > 1){
-                commandInput = new String[]{newInput.split(" ")[1]};
-            }
+        List<String> output = new ArrayList<>();
+        String newInput = input.substring(2);
+        output.add(newInput.split(" ")[0]);
+        if (newInput.split(" ").length > 1) {
+            output.add(newInput.split(" ")[1]);
+        }
+        return (String[])output.toArray();
+    }
+
+    Output returnQuizAnswer(String input)
+    {
+        Output output = new Output();
+        if(input.length() >= 1 && input.substring(0,1).equals("&"))
+        {
+            String[] niwInput = parseInput(input);
+            String[] commandInput = new String[]{niwInput[1]};
+            String commandName = niwInput[0];
             if(commandsList.containsKey(commandName))
             {
                 try{
-                    return commandsList.get(commandName).startProcess(commandInput);
+                    output.text = commandsList.get(commandName).startProcess(commandInput);
                 }
                 catch (Exception y){
-                    return y.getMessage();
+                    output.text = y.getMessage();
                 }
             }
             else
             {
-                return "Такой команды нет";
+                output.text = "Такой команды нет";
             }
         }
         else
         {
             if(quiz.quizWantsAnswer)
             {
-                return checkAnswer(input);
+                output.text = checkAnswer(input);
             }
         }
-        return "";
+        if (quiz.quizWantsAnswer)
+        {
+            output.possibleAnswers = ((OneAnswerQuestion)quiz.getCurrentQuestion()).possibleAnswers;
+            output.wantsAnswers = quiz.quizWantsAnswer;
+        }
+        return output;
     }
 
     public Dialogue() throws Exception {

@@ -67,6 +67,11 @@ public class Quiz
         askedQuestionsNumber = 0;
     }
 
+    public Question getCurrentQuestion()
+    {
+        return questionsList.get(currentQuestion);
+    }
+
     public String repeatQuestion()
     {
         if(questionsList.size() == 0)

@@ -8,9 +8,11 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 public class Telegram extends TelegramLongPollingBot {
+    public static LocalConfig localConfig = new LocalConfig("Supply/LocalConfig.txt");
     private static Dialogue dialogue;
     private static HashMap<String, Dialogue> chats;
 
@@ -27,7 +29,7 @@ public class Telegram extends TelegramLongPollingBot {
     }
 
     @Override
-    public void onUpdateReceived(Update update) {
+    public synchronized void onUpdateReceived(Update update) {
         Message message = update.getMessage();
         String user = message.getFrom().toString();
         if (!chats.containsKey(user)) {
