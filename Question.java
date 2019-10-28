@@ -1,6 +1,8 @@
 package com.company;
 
 import java.security.SignatureException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Question
 {
@@ -61,6 +63,17 @@ class OneAnswerQuestion extends Question
     public String getRightAnswer()
     {
         return rightAnswer;
+    }
+
+    public String[] getPossibleAnswersForButtons()
+    {
+        String[] buttonsPossibleAnswers = new String[possibleAnswers.length];
+        for(int u = 0; u < possibleAnswers.length; u++)
+        {
+            int number =1+ u;
+            buttonsPossibleAnswers[u] = number + "";
+        }
+        return buttonsPossibleAnswers;
     }
 
     public int getAnswerNumber()

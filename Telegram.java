@@ -6,13 +6,17 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Telegram extends TelegramLongPollingBot {
-    public static LocalConfig localConfig = new LocalConfig("Supply/LocalConfig.txt");
     private static Dialogue dialogue;
     private static HashMap<String, Dialogue> chats;
 
@@ -20,7 +24,6 @@ public class Telegram extends TelegramLongPollingBot {
         ApiContextInitializer.init();
         chats = new HashMap<String, Dialogue>();
         TelegramBotsApi botApi = new TelegramBotsApi();
-        //dialogue = new Dialogue();
         try {
             botApi.registerBot(new Telegram());
         } catch (TelegramApiException e) {
@@ -39,21 +42,50 @@ public class Telegram extends TelegramLongPollingBot {
                 e.printStackTrace();
             }
         }
-        String getString = "";
+        Output getData = new Output();
         try {
-            getString = chats.get(user).returnQuizAnswer(message.getText());
+            getData = chats.get(user).returnQuizAnswer(message.getText());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        sendMsg(message, getString);
+        if(!getData.text.equals(""))
+        {
+            sendMsg(message, getData);
+        }
     }
 
-    private void sendMsg(Message msg, String s){
-        SendMessage sendMessage = new SendMessage();
+    private synchronized void setButtons(SendMessage sendMessage, String[] answers) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(true);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        for (int i = 0; i < answers.length; i += 2) {
+            KeyboardRow row = new KeyboardRow();
+            for (int j = i; j < answers.length && j < i + 2; ++j)
+                row.add(new KeyboardButton(answers[j]));
+            keyboard.add(row);
+        }
+
+        replyKeyboardMarkup.setKeyboard(keyboard);
+    }
+
+    private synchronized void setText(SendMessage sendMessage, String text) {
         sendMessage.enableMarkdown(true);
+        sendMessage.setText(text);
+    }
+
+    private synchronized void sendMsg(Message msg, Output data) {
+        SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(msg.getChatId().toString());
         sendMessage.setReplyToMessageId(msg.getMessageId());
-        sendMessage.setText(s);
+
+        setText(sendMessage, data.text);
+        if (data.wantsAnswers)
+            setButtons(sendMessage, data.possibleAnswers);
+
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
@@ -63,11 +95,11 @@ public class Telegram extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return LocalConfig.botName;
+        return Config.botName;
     }
 
     @Override
     public String getBotToken() {
-        return LocalConfig.botToken;
+        return Config.botToken;
     }
 }

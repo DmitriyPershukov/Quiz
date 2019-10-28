@@ -9,26 +9,46 @@ public class Dialogue
 {
     private static Map<String, Command> commandsList = new HashMap<>();
     private Quiz quiz = new Quiz();
+    String getCommandName(String[] command)
+    {
+        return command[0];
+    }
 
     String[] parseInput(String input)
     {
-        List<String> output = new ArrayList<>();
-        String newInput = input.substring(2);
-        output.add(newInput.split(" ")[0]);
-        if (newInput.split(" ").length > 1) {
-            output.add(newInput.split(" ")[1]);
-        }
-        return (String[])output.toArray();
+        String[] output = null;
+        String newInput = input.substring(1);
+        output = newInput.split(" ");
+        return output;
     }
 
+    String[] getCommandInput(String[] command)
+    {
+        String[] commandInput = new String[command.length- 1];
+        if(command.length >= 2)
+        {
+            for(int jku = 1; jku < command.length; jku++)
+            {
+                commandInput[jku-1] = command[jku];
+            }
+        }
+        if (commandInput.length == 0)
+        {
+            return null;
+        }
+        else
+        {
+            return commandInput;
+        }
+    }
     Output returnQuizAnswer(String input)
     {
         Output output = new Output();
-        if(input.length() >= 1 && input.substring(0,1).equals("&"))
+        if(input.length() >= 1 && input.substring(0,1).equals("/"))
         {
-            String[] niwInput = parseInput(input);
-            String[] commandInput = new String[]{niwInput[1]};
-            String commandName = niwInput[0];
+            String[] newInput = parseInput(input);
+            String commandName = getCommandName(newInput);
+            String[] commandInput = getCommandInput(newInput);
             if(commandsList.containsKey(commandName))
             {
                 try{
@@ -52,7 +72,7 @@ public class Dialogue
         }
         if (quiz.quizWantsAnswer)
         {
-            output.possibleAnswers = ((OneAnswerQuestion)quiz.getCurrentQuestion()).possibleAnswers;
+            output.possibleAnswers = ((OneAnswerQuestion)quiz.getCurrentQuestion()).getPossibleAnswersForButtons();
             output.wantsAnswers = quiz.quizWantsAnswer;
         }
         return output;

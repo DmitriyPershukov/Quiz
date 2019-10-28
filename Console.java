@@ -13,7 +13,7 @@ public class Console
         {
             Scanner textReceiver = new Scanner(System.in);
             String input = textReceiver.nextLine();
-            String output = dialogue.returnQuizAnswer(input);
+            String output = dialogue.returnQuizAnswer(input).text;
             if(!output.equals(""))
             {
                 System.out.println(output);
