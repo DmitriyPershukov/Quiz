@@ -41,6 +41,7 @@ public class Dialogue
             return commandInput;
         }
     }
+    
     Output returnQuizAnswer(String input)
     {
         Output output = new Output();
