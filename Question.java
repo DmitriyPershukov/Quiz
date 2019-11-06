@@ -12,6 +12,10 @@ public class Question
     }
 
     questionType type;
+    public questionType getQuestionType()
+    {
+        return type;
+    }
 
     public String question;
 

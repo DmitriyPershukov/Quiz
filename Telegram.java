@@ -10,8 +10,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +20,7 @@ public class Telegram extends TelegramLongPollingBot {
 
     public static void init() throws Exception {
         ApiContextInitializer.init();
+        Config.setConfig();
         chats = new HashMap<String, Dialogue>();
         TelegramBotsApi botApi = new TelegramBotsApi();
         try {
@@ -45,12 +44,13 @@ public class Telegram extends TelegramLongPollingBot {
         Output getData = new Output();
         try {
             getData = chats.get(user).returnQuizAnswer(message.getText());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if(!getData.text.equals(""))
+            if(!getData.text.equals(""))
+            {
+                sendMsg(message, getData);
+            }
+        } catch (Exception e)
         {
-            sendMsg(message, getData);
+            e.printStackTrace();
         }
     }
 

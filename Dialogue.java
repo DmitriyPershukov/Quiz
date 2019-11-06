@@ -1,9 +1,6 @@
 package com.company;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Dialogue
 {
@@ -16,22 +13,12 @@ public class Dialogue
 
     String[] parseInput(String input)
     {
-        String[] output = null;
-        String newInput = input.substring(1);
-        output = newInput.split(" ");
-        return output;
+        return input.substring(1).split(" ");
     }
 
     String[] getCommandInput(String[] command)
     {
-        String[] commandInput = new String[command.length- 1];
-        if(command.length >= 2)
-        {
-            for(int jku = 1; jku < command.length; jku++)
-            {
-                commandInput[jku-1] = command[jku];
-            }
-        }
+        String[] commandInput = Arrays.copyOfRange(command, 1, command.length);
         if (commandInput.length == 0)
         {
             return null;
@@ -70,11 +57,7 @@ public class Dialogue
                 output.text = checkAnswer(input);
             }
         }
-        if (quiz.quizWantsAnswer)
-        {
-            output.possibleAnswers = ((OneAnswerQuestion)quiz.getCurrentQuestion()).getPossibleAnswersForButtons();
-            output.wantsAnswers = quiz.quizWantsAnswer;
-        }
+        output.setAnswers(quiz);
         return output;
     }
 
