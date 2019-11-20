@@ -61,9 +61,8 @@ public class Dialogue
         output.setAnswers(quiz);
         return output;
     }
-
-    public Dialogue() throws Exception {
-        quiz.modifyQuestionsList(Config.path);
+    public Dialogue()
+    {
         commandsList.put("help", new CommandWithoutInput("выводит список команд") {
             @Override
             public String process() {
@@ -133,7 +132,7 @@ public class Dialogue
     private String close()
     {
         System.exit(0);
-        return "";
+        return null;
     }
 
     String addQuestions(String path) throws Exception
@@ -146,13 +145,13 @@ public class Dialogue
         {
             return "Такого файла нет";
         }
-        return "";
+        return null;
     }
 
     private String shuffleQuestions()
     {
         quiz.shuffleQuestions();
-        return "";
+        return null;
     }
 
     private String getScore()
@@ -170,7 +169,7 @@ public class Dialogue
     private String restart()
     {
         quiz.clearScore();
-        return "";
+        return null;
     }
 
     private String commandHelp(String input)
@@ -189,7 +188,7 @@ public class Dialogue
     {
         if (quiz.quizWantsAnswer)
         {
-            return "Вы ещё не ответили на предыдуший вопрос";
+            return "Вы ещё не ответили на предыдущий вопрос";
         }
         else
         {
@@ -205,20 +204,11 @@ public class Dialogue
 abstract class Command
 {
     String description;
-    commandType type;
-
     public Command(String description)
     {
         this.description = description;
     }
-
     public abstract String startProcess(String[] args) throws Exception;
-
-    enum commandType
-    {
-        CommandWithInput,
-        CommandWithoutInput,
-    }
 }
 
 abstract class CommandWithoutInput extends Command
@@ -227,7 +217,6 @@ abstract class CommandWithoutInput extends Command
     CommandWithoutInput(String description)
     {
         super(description);
-        type = commandType.CommandWithoutInput;
     }
 
     public String startProcess(String[] args) throws Exception
@@ -245,9 +234,7 @@ abstract class CommandWithInput extends Command
     CommandWithInput(String description)
     {
         super(description);
-        type = commandType.CommandWithInput;
     }
-
     public String startProcess(String[] args) throws Exception
     {
         if(args == null)
@@ -256,6 +243,7 @@ abstract class CommandWithInput extends Command
         }
         return process(args);
     }
+
 }
 
 

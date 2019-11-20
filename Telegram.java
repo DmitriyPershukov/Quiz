@@ -15,13 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Telegram extends TelegramLongPollingBot {
-    private static Dialogue dialogue;
-    private static HashMap<String, Dialogue> chats;
+
+    private static HashMap<User, Dialogue> chats;
 
     public static void init() throws Exception {
         ApiContextInitializer.init();
         Config.setConfig();
-        chats = new HashMap<String, Dialogue>();
+        chats = new HashMap<User, Dialogue>();
         TelegramBotsApi botApi = new TelegramBotsApi();
         try {
             botApi.registerBot(new Telegram());
@@ -33,7 +33,7 @@ public class Telegram extends TelegramLongPollingBot {
     @Override
     public synchronized void onUpdateReceived(Update update) {
         Message message = update.getMessage();
-        String user = message.getFrom().toString();
+        User user = message.getFrom().toString();
         if (!chats.containsKey(user)) {
             try {
                 chats.put(user, new Dialogue());
@@ -44,7 +44,7 @@ public class Telegram extends TelegramLongPollingBot {
         Output getData = new Output();
         try {
             getData = chats.get(user).returnQuizAnswer(message.getText());
-            if(!getData.text.equals(""))
+            if(!(getData.text == null))
             {
                 sendMsg(message, getData);
             }

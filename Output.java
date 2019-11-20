@@ -10,7 +10,7 @@ public class Output
             this.wantsAnswers = quiz.quizWantsAnswer;
         }
     }
-    public String text = "";
+    public String text = null;
     public boolean wantsAnswers;
     public String[] possibleAnswers;
 }

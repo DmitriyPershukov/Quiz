@@ -8,7 +8,7 @@ import java.util.*;
 
 public class Quiz
 {
-    List<Question> questionsList = new ArrayList<Question>();
+    List<Question> questionsList = questionListFactory.questionsList;
     private int score = 0;
     private int currentQuestion = -1;
     private int i = 0;
@@ -89,7 +89,7 @@ public class Quiz
         return questionsList.get(currentQuestion).getQuestion();
     }
 
-    public List<String[]> splitByMarks (String[] questionsText, String[] markers)
+    public static List<String[]> splitByMarks (String[] questionsText, String[] markers)
     {
         List<String[]> outputArray = new ArrayList<>();
         List<String> markerList = new ArrayList<String>(Arrays.asList(markers));
