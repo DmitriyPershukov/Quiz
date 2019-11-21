@@ -33,7 +33,7 @@ public class Telegram extends TelegramLongPollingBot {
     @Override
     public synchronized void onUpdateReceived(Update update) {
         Message message = update.getMessage();
-        User user = message.getFrom().toString();
+        User user = new User(message);
         if (!chats.containsKey(user)) {
             try {
                 chats.put(user, new Dialogue());

@@ -1,14 +1,20 @@
 package com.company;
 
-import com.google.inject.spi.Message;
-
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import javax.ws.rs.NotSupportedException;
+
+import org.telegram.telegrambots.meta.api.objects.Update;
 
 public class User
 {
     String userId;
     public void identifyUserIdByMessage(Message message)
     {
-        throw new NotSupportedException();
+        userId = message.getFrom().getId().toString();
+    }
+    User(Message message)
+    {
+        identifyUserIdByMessage(message);
     }
 }
