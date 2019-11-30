@@ -51,10 +51,10 @@ public class Dialogue {
         return new Output().setButtons(quiz);
     }
 
-    public Dialogue(String userData) throws Exception {
-
-        quiz.modifyQuestionsList(Config.path);
+    public Dialogue(String userData) throws Exception
+    {
         user = userData;
+        quiz.questionsList = QuestionListFactory.questionsList;
         commandsList.put("help", new CommandWithPossibleInput("выводит список команд") {
             @Override
             public Output process(String[] args) {
