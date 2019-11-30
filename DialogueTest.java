@@ -9,16 +9,16 @@ public class DialogueTest
     @Test
     public void returnQuizAnswer() throws Exception
     {
-        Dialogue dialogue = new Dialogue();
-        String output0 = dialogue.returnQuizAnswer("/restart you").text;
-        assertEquals("Эта команда аргумента не имеет", output0);
+        Dialogue dialogue = new Dialogue("nau");
+        String output33 = dialogue.returnQuizAnswer("/restart you").text;
+        assertEquals("Эта команда аргумента не имеет", output33);
         String output1 = dialogue.returnQuizAnswer("/repeatQuestion").text;
         assertEquals("Вы не задали вопрос", output1);
         String output2 = dialogue.returnQuizAnswer("/ruy").text;
         assertEquals("Такой команды нет", output2);
         String output3 = dialogue.returnQuizAnswer("/addQuestions").text;
         assertEquals("Этой команде нужен аргумент",output3);
-        Dialogue dialogue1 = new Dialogue();
+        Dialogue dialogue1 = new Dialogue("nau");
         dialogue.addQuestions(Config.path);
         dialogue1.returnQuizAnswer("/addQuestions" + " " + Config.path);
         Quiz quiz0 = dialogue.getQuiz();

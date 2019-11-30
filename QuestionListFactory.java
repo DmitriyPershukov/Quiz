@@ -8,7 +8,7 @@ import java.util.List;
 
 import static com.company.Quiz.splitByMarks;
 
-public class questionListFactory
+public class QuestionListFactory
 {
     public static List<Question> questionsList = new ArrayList<Question>();
     public static void modifyQuestionsList() throws Exception

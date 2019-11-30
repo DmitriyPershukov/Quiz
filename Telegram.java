@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Telegram extends TelegramLongPollingBot {
-
     private static HashMap<User, Dialogue> chats;
 
     public static void init() throws Exception {
@@ -36,7 +35,7 @@ public class Telegram extends TelegramLongPollingBot {
         User user = new User(message);
         if (!chats.containsKey(user)) {
             try {
-                chats.put(user, new Dialogue());
+                chats.put(user, new Dialogue(user.userId));
             } catch (Exception e) {
                 e.printStackTrace();
             }

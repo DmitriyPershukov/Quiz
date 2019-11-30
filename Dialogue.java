@@ -1,203 +1,262 @@
 package com.company;
 
+import javafx.animation.Animation;
+import org.apache.commons.io.output.BrokenOutputStream;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import java.io.IOException;
 import java.util.*;
+import java.io.FileNotFoundException;
 
-public class Dialogue
-{
+public class Dialogue {
     private static Map<String, Command> commandsList = new HashMap<>();
     private Quiz quiz = new Quiz();
-    String getCommandName(String[] command)
-    {
+    private Editor editor = new Editor();
+    private String user = "";
+
+    String getCommandName(String[] command) {
         return command[0];
     }
 
-    String[] parseInput(String input)
-    {
+    String[] parseInput(String input) {
         return input.substring(1).split(" ");
     }
 
-    String[] getCommandInput(String[] command)
-    {
+    String[] getCommandInput(String[] command) {
         String[] commandInput = Arrays.copyOfRange(command, 1, command.length);
-        if (commandInput.length == 0)
-        {
+        if (commandInput.length == 0) {
             return null;
-        }
-        else
-        {
+        } else {
             return commandInput;
         }
     }
-    
-    Output returnQuizAnswer(String input)
-    {
-        Output output = new Output();
-        if(input.length() >= 1 && input.substring(0,1).equals("/"))
-        {
+
+    Output returnQuizAnswer(String input) throws IOException {
+        if (input.length() >= 1 && input.substring(0, 1).equals("/")) {
             String[] newInput = parseInput(input);
             String commandName = getCommandName(newInput);
             String[] commandInput = getCommandInput(newInput);
-            if(commandsList.containsKey(commandName))
-            {
-                try{
-                    output.text = commandsList.get(commandName).startProcess(commandInput);
+            if (commandsList.containsKey(commandName)) {
+                try {
+                    return commandsList.get(commandName).startProcess(commandInput).setButtons(quiz);
+                } catch (Exception y) {
+                    return new Output(y.getMessage()).setButtons(quiz);
                 }
-                catch (Exception y){
-                    output.text = y.getMessage();
-                }
+            } else {
+                return new Output("Такой команды нет").setButtons(quiz);
             }
-            else
-            {
-                output.text = "Такой команды нет";
-            }
+        } else {
+            if (quiz.quizWantsAnswer)
+                return checkAnswer(input).setButtons(quiz);
         }
-        else
-        {
-            if(quiz.quizWantsAnswer)
-            {
-                output.text = checkAnswer(input);
-            }
-        }
-        output.setAnswers(quiz);
-        return output;
+        return new Output().setButtons(quiz);
     }
-    public Dialogue()
-    {
-        commandsList.put("help", new CommandWithoutInput("выводит список команд") {
+
+    public Dialogue(String userData) throws Exception {
+
+        quiz.modifyQuestionsList(Config.path);
+        user = userData;
+        commandsList.put("help", new CommandWithPossibleInput("выводит список команд") {
             @Override
-            public String process() {
-                return help();
+            public Output process(String[] args) {
+                return help(args);
             }
         });
-        commandsList.put("questionPlease", new CommandWithoutInput("задает новый вопрос") {
+        commandsList.put("question", new CommandWithoutInput("задает новый вопрос") {
             @Override
-            public String process() {
+            public Output process() {
                 return getNewQuestion();
             }
         });
         commandsList.put("restart", new CommandWithoutInput("начинает новую игру") {
             @Override
-            public String process() {
+            public Output process() {
                 return restart();
             }
         });
-        commandsList.put("shuffleQuestions", new CommandWithoutInput("перемешивает вопросы") {
+        commandsList.put("editor", new CommandWithoutInput("открывает редактор вопросов") {
             @Override
-            public String process() {
-                return shuffleQuestions();
+            public Output process() {
+                return callEditor();
             }
         });
-        commandsList.put("closeProgramm", new CommandWithoutInput("закрывает программу") {
+        commandsList.put("shutdown", new CommandWithoutInput("закрывает программу") {
             @Override
-            public String process() {
+            public Output process() {
                 return close();
             }
         });
-        commandsList.put("getScore", new CommandWithoutInput("печатает результат") {
+        commandsList.put("repeat", new CommandWithoutInput("повторяет текущий вопрос") {
             @Override
-            public String process() {
-                return getScore();
-            }
-        });
-        commandsList.put("repeatQuestion", new CommandWithoutInput("повторяет текущий вопрос") {
-            @Override
-            public String process() {
+            public Output process() {
                 return repeatQuestion();
             }
         });
-        commandsList.put("commandHelp", new CommandWithInput("отображает справку по одной команде") {
+        commandsList.put("shuffle", new CommandWithoutInput("перемешивает вопросы") {
             @Override
-            public String process(String[] args) {
-                return commandHelp(args[0]);
+            public Output process() {
+                return shuffleQuestions();
             }
         });
-        commandsList.put("addQuestions", new CommandWithInput("добавляет вопросы по указанному пути") {
+        commandsList.put("score", new CommandWithoutInput("печатает результат") {
             @Override
-            public String process(String[] args) throws Exception {
-                return addQuestions(args[0]);
+            public Output process() {
+                return getScore();
+            }
+        });
+        commandsList.put("opme", new CommandWithInput("выдаёт права администратора текущему пользователю, если был подан правильный ключ") {
+            @Override
+            public Output process(String args[]) throws FileNotFoundException {
+                return opme(args[0]);
+            }
+        });
+        commandsList.put("op", new CommandWithInput("выдаёт права администратора пользователю, принимает как аргумент имя пользователя") {
+            @Override
+            public Output process(String args[]) throws FileNotFoundException {
+                return op(args[0]);
+            }
+        });
+
+        commandsList.put("deop", new CommandWithInput("забирает права у пользователя, принимает как аргумент имя пользователя") {
+            @Override
+            public Output process(String args[]) throws FileNotFoundException {
+                return deop(args[0]);
             }
         });
     }
 
-    private String checkAnswer(String ipnut)
-    {
-        return quiz.checkAnswer(ipnut);
+    private Output checkAnswer(String ipnut) {
+        return new Output(quiz.checkAnswer(ipnut));
     }
 
-    public Quiz getQuiz()
-    {
+    public Quiz getQuiz() {
         return quiz;
     }
 
-    private String close()
-    {
+    private Output close() {
         System.exit(0);
-        return null;
+        return new Output();
     }
 
-    String addQuestions(String path) throws Exception
-    {
-        try
-        {
+    Output addQuestions(String path) throws Exception {
+        try {
             quiz.modifyQuestionsList(path);
+        } catch (java.nio.file.NoSuchFileException wjr) {
+            return new Output("Такого файла нет");
         }
-        catch (java.nio.file.NoSuchFileException wjr)
-        {
-            return "Такого файла нет";
-        }
-        return null;
+        return new Output();
     }
 
-    private String shuffleQuestions()
-    {
+    private Output shuffleQuestions() {
         quiz.shuffleQuestions();
-        return null;
+        return new Output();
     }
 
-    private String getScore()
-    {
-        return quiz.getScore();
-    }
-
-    private String help()
-    {
-        StringBuilder stringBuilder = new StringBuilder("");
-        commandsList.forEach((x, c) -> stringBuilder.append("Команда ").append(x).append(" - ").append(c.description).append("\n"));
-        return stringBuilder.toString().substring(0, stringBuilder.toString().length() - 1);
-    }
-
-    private String restart()
-    {
-        quiz.clearScore();
-        return null;
-    }
-
-    private String commandHelp(String input)
-    {
-        if (commandsList.containsKey(input))
-        {
-            return "Команда" + " " + input + " " + commandsList.get(input).description;
-        }
+    private Output op(String name) throws FileNotFoundException {
+        if (Config.admins.contains(user))
+            return new Output(Config.addAdmin(name));
         else
+            return new Output("Get admin rights first. Use /opme key");
+    }
+
+    private Output opme(String key) throws FileNotFoundException {
+        if (key.equals(Config.key))
+            return new Output(Config.addAdmin(user));
+        else
+            return new Output("Wrong key");
+    }
+    private Output deop(String name) throws FileNotFoundException {
+        if (Config.admins.contains(user))
+            return new Output(Config.deleteAdmin(name));
+        else
+            return new Output("Get admin rights first. Use /opme key");
+    }
+
+    private Output callEditor() {
+        if (!editor.running) {
+            if (!quiz.quizWantsAnswer) {
+                editor.running = true;
+                return new Output("Редактор НИХУЯ НЕ ОТКРЫТ ПУШТО НАДО ПРЯМО ВЫЗЫВАТЬ");
+            } else
+                return new Output("Для начала ответьте на вопрос");
+        } else
+            return new Output("Редактор уже открыт");
+    }
+
+    private Output closeEditor() {
+        if (editor.running) {
+            editor = new Editor();
+            return new Output("Редактор закрыт");
+        } else
+            return new Output("Редактор не открыт");
+    }
+
+    private Output getScore() {
+        return new Output(quiz.getScore());
+    }
+
+    private Output help(String... input)
+    {
+        if (input != null)
         {
-            return "Такой команды нет";
+            if (commandsList.containsKey(input[0]))
+            {
+                return new Output("Команда" + " " + input[0] + " " + commandsList.get(input[0]).description);
+            } else
+            {
+                return new Output("Такой команды нет");
+            }
+        } else
+            {
+            StringBuilder stringBuilder = new StringBuilder("");
+            commandsList.forEach((x, c) -> stringBuilder.append("Команда ").append(x).append(" - ").append(c.description).append("\n"));
+            return new Output(stringBuilder.toString().substring(0, stringBuilder.toString().length() - 1));
         }
     }
 
-    private String getNewQuestion()
+    private Output restart() {
+        quiz.clearScore();
+        return new Output();
+    }
+
+    private Output commandHelp(String input)
+    {
+        if (commandsList.containsKey(input)) {
+            return new Output("Команда" + " " + input + " " + commandsList.get(input).description);
+        } else {
+            return new Output("Такой команды нет");
+        }
+    }
+
+    private Output getNewQuestion()
     {
         if (quiz.quizWantsAnswer)
         {
-            return "Вы ещё не ответили на предыдущий вопрос";
-        }
-        else
+            return new Output("Вы ещё не ответили на предыдуший вопрос");
+        } else if (editor.running) {
+            return new Output("Для начала выйдите из редактора");
+        } else
         {
-            return quiz.getNewQuestion();
+            return new Output(quiz.getNewQuestion());
         }
     }
-    private String repeatQuestion()
+
+    private Output repeatQuestion()
     {
-        return quiz.repeatQuestion();
+        return new Output(quiz.repeatQuestion());
+    }
+}
+
+abstract class CommandWithPossibleInput extends Command
+{
+    protected abstract Output process(String[] args) throws Exception;
+    CommandWithPossibleInput(String description)
+    {
+        super(description);
+    }
+
+    public Output startProcess(String[] args) throws Exception
+    {
+        return process(args);
     }
 }
 
@@ -208,18 +267,17 @@ abstract class Command
     {
         this.description = description;
     }
-    public abstract String startProcess(String[] args) throws Exception;
+    public abstract Output startProcess(String[] args) throws Exception;
 }
 
 abstract class CommandWithoutInput extends Command
 {
-    protected abstract String process() throws Exception;
+    protected abstract Output process() throws Exception;
     CommandWithoutInput(String description)
     {
         super(description);
     }
-
-    public String startProcess(String[] args) throws Exception
+    public Output startProcess(String[] args) throws Exception
     {
         if (args != null) {
             throw new Exception("Эта команда аргумента не имеет");
@@ -228,22 +286,19 @@ abstract class CommandWithoutInput extends Command
     }
 }
 
-abstract class CommandWithInput extends Command
-{
-    protected abstract String process(String[] args) throws Exception;
-    CommandWithInput(String description)
-    {
+abstract class CommandWithInput extends Command {
+    protected abstract Output process(String[] args) throws Exception;
+
+    CommandWithInput(String description) {
         super(description);
     }
-    public String startProcess(String[] args) throws Exception
-    {
-        if(args == null)
-        {
+
+    public Output startProcess(String[] args) throws Exception {
+        if (args == null) {
             throw new Exception("Этой команде нужен аргумент");
         }
         return process(args);
     }
-
 }
 
 

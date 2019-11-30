@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class User
 {
     String userId;
+    Dialogue dialogue;
     public void identifyUserIdByMessage(Message message)
     {
         userId = message.getFrom().getId().toString();

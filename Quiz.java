@@ -8,7 +8,7 @@ import java.util.*;
 
 public class Quiz
 {
-    List<Question> questionsList = questionListFactory.questionsList;
+    List<Question> questionsList = QuestionListFactory.questionsList;
     private int score = 0;
     private int currentQuestion = -1;
     private int i = 0;

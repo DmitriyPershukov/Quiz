@@ -8,7 +8,7 @@ public class Console
 {
     public static void startConsole() throws Exception {
         hello();
-        Dialogue dialogue = new Dialogue();
+        Dialogue dialogue = new Dialogue("nau");
         while (true)
         {
             Scanner textReceiver = new Scanner(System.in);
@@ -26,7 +26,6 @@ public class Console
        System.out.println("Приветсвую, это программа-викторина, которая может задавать вопросы.\n" +
                "Чтобы увидеть список команд введи команду \"& help\"");
    }
-
 }
 
 
