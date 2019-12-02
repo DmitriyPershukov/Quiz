@@ -13,6 +13,7 @@ public class QuestionListFactory
     public static List<Question> questionsList = new ArrayList<Question>();
     public static void modifyQuestionsList() throws Exception
     {
+        questionsList = new ArrayList<Question>();
         String text = Files.readString(Paths.get(Config.path));
         String[] questionsText = text.split("\r\n");
         List<String[]> questionsSource = splitByMarks(questionsText, new String[]{"oaq","maq","faq"});

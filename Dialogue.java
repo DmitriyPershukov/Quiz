@@ -1,11 +1,12 @@
 package com.company;
 
-import javafx.animation.Animation;
 import org.apache.commons.io.output.BrokenOutputStream;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import java.io.IOException;
 import java.util.*;
 import java.io.FileNotFoundException;
+
+import static com.company.Editor.parseData;
 
 public class Dialogue {
     private static Map<String, Command> commandsList = new HashMap<>();
@@ -30,7 +31,7 @@ public class Dialogue {
         }
     }
 
-    Output returnQuizAnswer(String input) throws IOException {
+    Output returnQuizAnswer(String input) throws Exception {
         if (input.length() >= 1 && input.substring(0, 1).equals("/")) {
             String[] newInput = parseInput(input);
             String commandName = getCommandName(newInput);
@@ -42,11 +43,13 @@ public class Dialogue {
                     return new Output(y.getMessage()).setButtons(quiz);
                 }
             } else {
-                return new Output("Такой команды нет").setButtons(quiz);
+                return new Output("Такой команды нет");
             }
         } else {
             if (quiz.quizWantsAnswer)
                 return checkAnswer(input).setButtons(quiz);
+            if (editor.running)
+                return editor.parseData(input);
         }
         return new Output().setButtons(quiz);
     }
@@ -55,71 +58,76 @@ public class Dialogue {
     {
         user = userData;
         quiz.questionsList = QuestionListFactory.questionsList;
-        commandsList.put("help", new CommandWithPossibleInput("выводит список команд") {
+        commandsList.put("help", new CommandWithPossibleInput("Выводит список команд") {
             @Override
             public Output process(String[] args) {
                 return help(args);
             }
         });
-        commandsList.put("question", new CommandWithoutInput("задает новый вопрос") {
+        commandsList.put("question", new CommandWithoutInput("Задает новый вопрос") {
             @Override
             public Output process() {
                 return getNewQuestion();
             }
         });
-        commandsList.put("restart", new CommandWithoutInput("начинает новую игру") {
+        commandsList.put("restart", new CommandWithoutInput("Начинает новую игру") {
             @Override
             public Output process() {
                 return restart();
             }
         });
-        commandsList.put("editor", new CommandWithoutInput("открывает редактор вопросов") {
+        commandsList.put("editor", new CommandWithoutInput("Открывает редактор вопросов") {
             @Override
-            public Output process() {
+            public Output process() throws Exception {
                 return callEditor();
             }
         });
-        commandsList.put("shutdown", new CommandWithoutInput("закрывает программу") {
+        commandsList.put("shutdown", new CommandWithoutInput("Закрывает программу") {
             @Override
             public Output process() {
                 return close();
             }
         });
-        commandsList.put("repeat", new CommandWithoutInput("повторяет текущий вопрос") {
+        commandsList.put("repeat", new CommandWithoutInput("Повторяет текущий вопрос") {
             @Override
             public Output process() {
                 return repeatQuestion();
             }
         });
-        commandsList.put("shuffle", new CommandWithoutInput("перемешивает вопросы") {
+        commandsList.put("shuffle", new CommandWithoutInput("Перемешивает вопросы") {
             @Override
             public Output process() {
                 return shuffleQuestions();
             }
         });
-        commandsList.put("score", new CommandWithoutInput("печатает результат") {
+        commandsList.put("score", new CommandWithoutInput("Печатает результат") {
             @Override
             public Output process() {
                 return getScore();
             }
         });
-        commandsList.put("opme", new CommandWithInput("выдаёт права администратора текущему пользователю, если был подан правильный ключ") {
+        commandsList.put("opme", new CommandWithInput("Выдаёт права администратора текущему пользователю, если был подан правильный ключ") {
             @Override
             public Output process(String args[]) throws FileNotFoundException {
                 return opme(args[0]);
             }
         });
-        commandsList.put("op", new CommandWithInput("выдаёт права администратора пользователю, принимает как аргумент имя пользователя") {
+        commandsList.put("op", new CommandWithInput("Выдаёт права администратора пользователю, принимает как аргумент имя пользователя") {
             @Override
             public Output process(String args[]) throws FileNotFoundException {
                 return op(args[0]);
             }
         });
-
-        commandsList.put("deop", new CommandWithInput("забирает права у пользователя, принимает как аргумент имя пользователя") {
+        commandsList.put("deop", new CommandWithInput("Забирает права у пользователя, принимает как аргумент имя пользователя") {
             @Override
             public Output process(String args[]) throws FileNotFoundException {
                 return deop(args[0]);
+            }
+        });
+        commandsList.put("start", new CommandWithoutInput("Приветственное сообщение") {
+            @Override
+            public Output process() {
+                return start();
             }
         });
     }
@@ -155,57 +163,54 @@ public class Dialogue {
         if (Config.admins.contains(user))
             return new Output(Config.addAdmin(name));
         else
-            return new Output("Get admin rights first. Use /opme key");
+            return new Output("Сначала получите права администратора. Используйте: /opme key, где key - ключ от админки");
     }
 
     private Output opme(String key) throws FileNotFoundException {
         if (key.equals(Config.key))
             return new Output(Config.addAdmin(user));
         else
-            return new Output("Wrong key");
+            return new Output("Неверный ключ");
     }
     private Output deop(String name) throws FileNotFoundException {
         if (Config.admins.contains(user))
             return new Output(Config.deleteAdmin(name));
         else
-            return new Output("Get admin rights first. Use /opme key");
+            return new Output("Сначала получите права администратора. Используйте: /opme key, где key - ключ от админки");
     }
 
-    private Output callEditor() {
-        if (!editor.running) {
-            if (!quiz.quizWantsAnswer) {
-                editor.running = true;
-                return new Output("Редактор НИХУЯ НЕ ОТКРЫТ ПУШТО НАДО ПРЯМО ВЫЗЫВАТЬ");
-            } else
-                return new Output("Для начала ответьте на вопрос");
-        } else
-            return new Output("Редактор уже открыт");
-    }
-
-    private Output closeEditor() {
-        if (editor.running) {
-            editor = new Editor();
-            return new Output("Редактор закрыт");
-        } else
-            return new Output("Редактор не открыт");
+    private Output callEditor() throws Exception {
+        if (Config.admins.contains(user)) {
+            if (!editor.running) {
+                if (!quiz.quizWantsAnswer) {
+                    editor.running = true;
+                    return parseData("");
+                } else
+                    return new Output("Для начала ответьте на вопрос");
+            } else {
+                editor = new Editor();
+                return new Output("Редактор закрыт");
+            }
+        }
+        else {
+            return new Output("Для использования редактора, получите права администратора");
+        }
     }
 
     private Output getScore() {
         return new Output(quiz.getScore());
     }
 
-    private Output help(String... input)
-    {
-        if (input != null)
-        {
-            if (commandsList.containsKey(input[0]))
-            {
+    private Output help(String... input) {
+        if (input != null) {
+            if (commandsList.containsKey(input[0]))  {
                 return new Output("Команда" + " " + input[0] + " " + commandsList.get(input[0]).description);
-            } else
-            {
+            }
+            else {
                 return new Output("Такой команды нет");
             }
-        } else
+        }
+        else
             {
             StringBuilder stringBuilder = new StringBuilder("");
             commandsList.forEach((x, c) -> stringBuilder.append("Команда ").append(x).append(" - ").append(c.description).append("\n"));
@@ -213,29 +218,32 @@ public class Dialogue {
         }
     }
 
+    private Output start() {
+        return new Output("Вас приветствует Quiz бот!\nВот список доступных комманд:\n" + help(null).text);
+    }
+
     private Output restart() {
         quiz.clearScore();
         return new Output();
     }
 
-    private Output commandHelp(String input)
-    {
+    private Output commandHelp(String input) {
         if (commandsList.containsKey(input)) {
             return new Output("Команда" + " " + input + " " + commandsList.get(input).description);
-        } else {
+        }
+        else {
             return new Output("Такой команды нет");
         }
     }
 
-    private Output getNewQuestion()
-    {
-        if (quiz.quizWantsAnswer)
-        {
+    private Output getNewQuestion() {
+        if (quiz.quizWantsAnswer) {
             return new Output("Вы ещё не ответили на предыдуший вопрос");
-        } else if (editor.running) {
+        }
+        else if (editor.running) {
             return new Output("Для начала выйдите из редактора");
-        } else
-        {
+        }
+        else {
             return new Output(quiz.getNewQuestion());
         }
     }

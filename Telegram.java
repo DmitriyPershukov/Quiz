@@ -15,12 +15,12 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Telegram extends TelegramLongPollingBot {
-    private static HashMap<User, Dialogue> chats;
+    private static HashMap<String, Dialogue> chats;
 
     public static void init() throws Exception {
         ApiContextInitializer.init();
         Config.setConfig();
-        chats = new HashMap<User, Dialogue>();
+        chats = new HashMap<String, Dialogue>();
         TelegramBotsApi botApi = new TelegramBotsApi();
         try {
             botApi.registerBot(new Telegram());
@@ -33,17 +33,17 @@ public class Telegram extends TelegramLongPollingBot {
     public synchronized void onUpdateReceived(Update update) {
         Message message = update.getMessage();
         User user = new User(message);
-        if (!chats.containsKey(user)) {
+        if (!chats.containsKey(user.userId)) {
             try {
-                chats.put(user, new Dialogue(user.userId));
+                chats.put(user.userId, new Dialogue(user.userId));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         Output getData = new Output();
         try {
-            getData = chats.get(user).returnQuizAnswer(message.getText());
-            if(!(getData.text == null))
+            getData = chats.get(user.userId).returnQuizAnswer(message.getText());
+            if(!(getData.text == null) && getData.text != "")
             {
                 sendMsg(message, getData);
             }
@@ -79,10 +79,10 @@ public class Telegram extends TelegramLongPollingBot {
     private synchronized void sendMsg(Message msg, Output data) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(msg.getChatId().toString());
-        sendMessage.setReplyToMessageId(msg.getMessageId());
+        //sendMessage.setReplyToMessageId(msg.getMessageId());
 
         setText(sendMessage, data.text);
-        if (data.wantsAnswers)
+        if (data.possibleAnswers != null)
             setButtons(sendMessage, data.possibleAnswers);
 
         try {
