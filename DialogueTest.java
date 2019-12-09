@@ -10,8 +10,8 @@ public class DialogueTest
     public void returnQuizAnswer() throws Exception
     {
         Dialogue dialogue = new Dialogue("nau");
-        String output33 = dialogue.returnQuizAnswer("/restart you").text;
-        assertEquals("Эта команда аргумента не имеет", output33);
+        String output0 = dialogue.returnQuizAnswer("/restart you").text;
+        assertEquals("Эта команда аргумента не имеет", output0);
         String output1 = dialogue.returnQuizAnswer("/repeatQuestion").text;
         assertEquals("Вы не задали вопрос", output1);
         String output2 = dialogue.returnQuizAnswer("/ruy").text;

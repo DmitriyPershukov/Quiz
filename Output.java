@@ -10,6 +10,20 @@ public class Output
         }
         return this;
     }
+    public static Output concatinateOutputs(Output output, Output newOutput)
+    {
+        if(output.text != null)
+        {
+            output.text += newOutput.text;
+        }
+        else
+        {
+            output.text = newOutput.text;
+        }
+        output.possibleAnswers = Utility.concatinateArrays(output.possibleAnswers, newOutput.possibleAnswers);
+        return output;
+    }
+
     Output (String... input)
     {
         if(input.length != 0)

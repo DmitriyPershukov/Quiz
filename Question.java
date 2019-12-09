@@ -2,18 +2,18 @@ package com.company;
 
 import java.security.SignatureException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.IntStream;
 
-public class Question {
-    public int setQuestion(String[] questionsText, int i) {
+public class Question
+{
+    public int setQuestion(String[] questionsText, int i)
+    {
         return 3;
     }
 
     questionType type;
-
-    public questionType getQuestionType() {
+    public questionType getQuestionType()
+    {
         return type;
     }
 
@@ -22,100 +22,12 @@ public class Question {
     public boolean checkAnswer(String userAnswer) throws SignatureException {
         return true;
     }
-    public String getQuestion() {
-        return question;
-    }
-    class MultipleAnswerQuestion extends Question
+
+    public String getQuestion()
     {
-        String[] possibleAnswers;
-
-        public String[] getRightAnswer()
-        {
-            return rightAnswers;
-        }
-        public String getQuestion()
-        {
-            StringBuilder output = new StringBuilder();
-            output.append(question + "/n");
-            Arrays.asList(possibleAnswers).forEach((c)-> output.append(c+"/n"));
-            output.append("/n");
-            return output.toString() + "Введите номера правильных ответов";
-        }
-        int[] rightAnswerNumber;
-        String[] rightAnswers;
-        public void setQuestion(String[] questionsText)
-        {
-            int s = 1;
-            type = questionType.multipleAnswerQuestion;
-            question = questionsText[s];
-            s++;
-            int rightAnswerNumber = Integer.parseInt(questionsText[s]);
-            s++;
-            int answerNumber = Integer.parseInt(questionsText[s]);
-            s++;
-            String[] newAnswers = new String[answerNumber];
-            List<String> newRightAnswers = new ArrayList();
-            for(int i = 0; i < answerNumber; i++)
-            {
-                newAnswers[i] = questionsText[s];
-                if(i+1 <= rightAnswerNumber)
-                {
-                    newRightAnswers.add(questionsText[s]);
-                }
-                s++;
-            }
-            possibleAnswers = newAnswers;
-            rightAnswers = newRightAnswers.toArray(String[]::new);
-        }
-        public boolean checkAnswer(String userAnswer) throws SignatureException
-        {
-            String[] parsedUserAnswer = userAnswer.split(",");
-            for(int i = 0; i< parsedUserAnswer.length; i++)
-            {
-                if(!Utility.isNumeric(parsedUserAnswer[i]))
-                {
-                    throw new SignatureException();
-                }
-            }
-            for(int i = 0; i< parsedUserAnswer.length; i++)
-            {
-                int I = i;
-                if(!IntStream.of(rightAnswerNumber).anyMatch(c -> c ==Integer.parseInt(parsedUserAnswer[I])))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+        return  question;
     }
 
-    class FreeAnswerQuestion extends Question
-    {
-        public boolean checkAnswer(String userAnswer)
-        {
-            if(rightAnswer.equals(userAnswer))
-            {
-                return true;
-            }
-            else
-            { return false;
-            }
-        }
-
-        public void setQuestion(String[] questionsText)
-        {
-            int k = 1;
-            question = questionsText[k];
-        }
-        public String getQuestion()
-        {
-            StringBuilder output = new StringBuilder();
-            output.append(question).append("/n");
-            output.append("Введите верный по вашему мнению ответ");
-            return output.toString();
-        }
-        String rightAnswer;
-    }
     enum questionType
     {
         multipleAnswerQuestion("maq"),

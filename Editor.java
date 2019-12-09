@@ -1,30 +1,45 @@
 package com.company;
 
+import com.google.inject.internal.cglib.core.$ClassInfo;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 class QuestionBuilder {
-    static String type = null;
-    static String question = null;
-    static ArrayList<String> answers = new ArrayList<String>();
+    String type = null;
+    String question = null;
+    ArrayList<String> answers = new ArrayList<String>();
 
-    public static String build() {
+    public String build() {
         String s = type + "\r\n" + question + "\r\n" + String.valueOf(answers.size());
         for (int i = 0; i < answers.size(); ++i)
             s += "\r\n" + answers.get(i);
         return s;
     }
 
-    public static void add() throws Exception {
+    public void add() throws Exception {
         Files.write(Paths.get(Config.path), ("\r\n" + build()).getBytes(), StandardOpenOption.APPEND);
         QuestionListFactory.modifyQuestionsList();
     }
 }
 
-class OAQuestionBuilder extends QuestionBuilder {
+abstract class InputHandler
+{
+    abstract Output action(Editor editor, String input) throws Exception;
+}
+
+abstract class Action
+{
+    abstract Output action(Editor editor);
+}
+
+class OAQuestionBuilder extends QuestionBuilder
+{
     OAQuestionBuilder() {
         type = "oaq";
     }
@@ -37,119 +52,172 @@ public class Editor {
         CREATION_OAQ,
         PREVIEW,
         QUESTION_LIST,
-        NONE
     }
 
-    public static boolean running = false;
-    private static State state;
-
-    private static QuestionBuilder question;
-
-    Editor() {
-        running = false;
-        state = State.NONE;
-    }
-
-    public static Output parseData(String s) throws Exception {
-        Output output = new Output("");
-        switch (state) {
-            case NONE:
-            default:
-                state = State.MENU;
-                break;
-            case MENU:
-                switch (s) {
-                    case "Создать":
-                        state = State.TYPE_OF_QUESTION;
-                        break;
-                    case "Список":
-                        state = State.QUESTION_LIST;
-                        break;
-                    case "Выход":
-                        state = State.NONE;
-                        running = false;
-                        break;
-                }
-                break;
-            case TYPE_OF_QUESTION:
-               switch (s) {
-                   case "Один вариант":
-                       state = State.CREATION_OAQ;
-                       question = new OAQuestionBuilder();
-                       output.text = "Введите вопрос";
-                       break;
-                   case "Несколько вариантов":
-                       state = State.MENU;
-                       output.text = "Несколько вариантов для ответа еще не реализованы :(\n";
-                       break;
-                   case "Слово":
-                       state = State.MENU;
-                       output.text = "Ответ словом еще не реализован :(\n";
-                       break;
-                   case "Назад":
-                       state = State.MENU;
-                       break;
-                   default:
-                       output.text = "Неизвестная команда\nИспользуйте кнопки\n";
-               }
-               break;
-            case CREATION_OAQ:
-                output.text = creationOaq(s);
-                break;
-            case PREVIEW:
-                switch (s) {
-                    case "Создать":
-                        state = State.MENU;
-                        QuestionBuilder.add();
-                        output.text = "Вопрос добавлен\n";
-                        break;
-                    case "Отменить":
-                        state = State.MENU;
-                        output.text = "Создание вопроса отменено\n";
-                        break;
-                    default:
-                        output.text = "Неизвестная команда\nИспользуйте кнопки\n";
-                }
-                break;
-            case QUESTION_LIST:
-                switch (s) {
-                    case "Назад":
-                        state = State.MENU;
-                        break;
-                    default:
-                        output.text = "Неизвестная команда\nИспользуйте кнопки\n";
-                }
-                break;
-        }
-
-        switch (state) {
-            case MENU:
-                output.text += "Добро пожаловать в редактор\nДля управления используйте кнопки\n";
-                output.possibleAnswers = new String[]{"Создать", "Список", "Выход"};
-                break;
-            case TYPE_OF_QUESTION:
+    public static Map<State, Action> actionsUponState= new HashMap<>();
+    public static Map<State, InputHandler> inputHandlersUponState = new HashMap<>();
+    static
+    {
+        actionsUponState.put(State.CREATION_OAQ, new Action() {
+            @Override
+            Output action(Editor editor) {
+                Output output = new Output();
+                output.possibleAnswers = new String[]{"Готово"};
+                return output;
+            }
+        });
+        actionsUponState.put(State.PREVIEW, new Action() {
+            @Override
+            Output action(Editor editor) {
+                Output output = new Output();
+                output.text += "Созданный вами вопрос\n```\n" + editor.questionBuilder.build() + "\n```";
+                output.possibleAnswers = new String[]{"Создать", "Отменить"};
+                return output;
+            }
+        });
+        actionsUponState.put(State.QUESTION_LIST, new Action() {
+            @Override
+            Output action(Editor editor) {
+                Output output = new Output();
+                output.text = "Вот список вопросов\n" + editor.showQuestions();
+                output.possibleAnswers = new String[]{"Назад"};
+                return output;
+            }
+        });
+        actionsUponState.put(State.TYPE_OF_QUESTION, new Action() {
+            @Override
+            Output action(Editor editor)
+            {
+                Output output = new Output();
                 output.text += "Выберите тип вопроса.\n" +
                         "Один вариант - тестовый вопрос с одним верным вариантом ответа\n" +
                         "Несколько вариантов - тестовый вопрос с, возможно, несколькими правильными вариантами ответа\n" +
                         "Слово - вопрос, ответить на который необходимо вручную\n";
                 output.possibleAnswers = new String[]{"Один вариант", "Несколько вариантов", "Слово", "Назад"};
-                break;
-            case CREATION_OAQ:
-                output.possibleAnswers = new String[]{"Готово"};
-                break;
-            case PREVIEW:
-                output.text += "Созданный вами вопрос\n```\n" + question.build() + "\n```";
-                output.possibleAnswers = new String[]{"Создать", "Отменить"};
-                break;
-            case QUESTION_LIST:
-                output.text = "Вот список вопросов\n" + showQuestions();
-                output.possibleAnswers = new String[]{"Назад"};
-                break;
-        }
+                return output;
+            }
+        });
+        actionsUponState.put(State.MENU, new Action() {
+            @Override
+            Output action(Editor editor) {
+                Output output = new Output();
+                output.text += "Добро пожаловать в редактор\nДля управления используйте кнопки\n";
+                output.possibleAnswers = new String[]{"Создать", "Список", "Выход"};
+                return output;
+            }
+        });
+
+        inputHandlersUponState.put(State.TYPE_OF_QUESTION, new InputHandler() {
+            @Override
+            protected Output action(Editor editor, String input)
+            {
+                switch (input) {
+                    case "Один вариант":
+                        editor.state = State.CREATION_OAQ;
+                        editor.questionBuilder = new OAQuestionBuilder();
+                        return new Output("Введите вопрос");
+                    case "Несколько вариантов":
+                        editor.state = State.MENU;
+                        return new Output("Несколько вариантов для ответа еще не реализованы :(\n");
+                    case "Слово":
+                        editor.state = State.MENU;
+                        return new Output("Ответ словом еще не реализован :(\n");
+                    case "Назад":
+                        editor.state = State.MENU;
+                        break;
+                    default:
+                        return new Output("Неизвестная команда\nИспользуйте кнопки\n");
+                }
+                return new Output();
+            }
+        });
+        inputHandlersUponState.put(State.MENU, new InputHandler() {
+            @Override
+            Output action(Editor editor, String input)
+            {
+                switch (input) {
+                    case "Создать":
+                        editor.state = State.TYPE_OF_QUESTION;
+                        break;
+                    case "Список":
+                        editor.state = State.QUESTION_LIST;
+                        break;
+                    case "Выход":
+                        editor.shutdownEditor();
+                        break;
+                }
+                return new Output();
+            }
+        });
+        inputHandlersUponState.put(State.CREATION_OAQ, new InputHandler() {
+            @Override
+            protected Output action(Editor editor, String input)
+            {
+                Output output = new Output();
+                output.text = editor.creationOaq(input);
+                return output;
+            }
+        });
+        inputHandlersUponState.put(State.PREVIEW, new InputHandler() {
+            @Override
+            protected Output action(Editor editor, String input) throws Exception {
+                switch (input)
+                {
+                    case "Создать":
+                        editor.state = State.MENU;
+                        editor.questionBuilder.add();
+                        return new Output("Вопрос добавлен\n");
+                    case "Отменить":
+                        editor.state = State.MENU;
+                        return new Output("Создание вопроса отменено\n");
+                    default:
+                        return new Output("Неизвестная команда\nИспользуйте кнопки\n");
+                }
+            }
+        });
+        inputHandlersUponState.put(State.QUESTION_LIST, new InputHandler() {
+            @Override
+            protected Output action(Editor editor, String input)
+            {
+                switch (input) {
+                    case "Назад":
+                        editor.state = State.MENU;
+                        return new Output();
+                    default:
+                        return new Output("Неизвестная команда\nИспользуйте кнопки\n");
+                }
+            }
+        });
+    }
+
+    public boolean running = false;
+
+    private State state;
+
+    private QuestionBuilder questionBuilder;
+
+    Editor()
+    {}
+    public void shutdownEditor()
+    {
+        running = false;
+    }
+
+    public void startEditor()
+    {
+        running = true;
+        state = State.MENU;
+    }
+
+    public Output parseData(String input) throws Exception {
+        Output output = new Output("");
+        output = Output.concatinateOutputs(output, inputHandlersUponState.get(state).action(this, input));
+        output = Output.concatinateOutputs(output, actionsUponState.get(state).action(this));
         return output;
     }
 
-    private static String showQuestions() {
+    private String showQuestions()
+    {
         ArrayList<Question> ar = (ArrayList<Question>) QuestionListFactory.questionsList;
         String s = "";
         for (int i = 0; i < ar.size(); ++i)
@@ -157,13 +225,15 @@ public class Editor {
         return s;
     }
 
-    private static String creationOaq(String text) {
-        if (text.equals("Готово")) {
-            if (question.question == null)
+    public String creationOaq(String text)
+    {
+        if (text.equals("Готово"))
+        {
+            if (questionBuilder.question == null)
                 return "Вы не задали вопрос";
-            else if (question.answers.size() == 0)
+            else if (questionBuilder.answers.size() == 0)
                 return "Вы не задали правильный ответ";
-            else if (question.answers.size() == 1)
+            else if (questionBuilder.answers.size() == 1)
                 return "Вы не задали ни одного неверного ответа";
             else {
                 state = State.PREVIEW;
@@ -171,14 +241,14 @@ public class Editor {
             }
         }
 
-        if (question.question == null) {
-            question.question = text;
+        if (questionBuilder.question == null) {
+            questionBuilder.question = text;
             return "Введите **правильный** ответ";
         }
         else {
-            question.answers.add(text);
+            questionBuilder.answers.add(text);
             String message = "Введите **дополнительный** вариант ответа";
-            if (question.answers.size() > 1)
+            if (questionBuilder.answers.size() > 1)
                 message += "\nВы можете завершить создание вопроса, нажав готово\n";
             return message;
         }

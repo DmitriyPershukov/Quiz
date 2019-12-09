@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.*;
 import java.io.FileNotFoundException;
 
-import static com.company.Editor.parseData;
-
 public class Dialogue {
     private static Map<String, Command> commandsList = new HashMap<>();
     private Quiz quiz = new Quiz();
@@ -182,13 +180,16 @@ public class Dialogue {
     private Output callEditor() throws Exception {
         if (Config.admins.contains(user)) {
             if (!editor.running) {
-                if (!quiz.quizWantsAnswer) {
-                    editor.running = true;
-                    return parseData("");
-                } else
+                if (!quiz.quizWantsAnswer)
+                {
+                    editor.startEditor();
+                    return editor.parseData("");
+                }
+                else
                     return new Output("Для начала ответьте на вопрос");
-            } else {
-                editor = new Editor();
+            } else
+            {
+
                 return new Output("Редактор закрыт");
             }
         }
@@ -275,6 +276,7 @@ abstract class Command
     {
         this.description = description;
     }
+    public Command(){};
     public abstract Output startProcess(String[] args) throws Exception;
 }
 
@@ -285,6 +287,8 @@ abstract class CommandWithoutInput extends Command
     {
         super(description);
     }
+    CommandWithoutInput() {
+    };
     public Output startProcess(String[] args) throws Exception
     {
         if (args != null) {
@@ -297,10 +301,11 @@ abstract class CommandWithoutInput extends Command
 abstract class CommandWithInput extends Command {
     protected abstract Output process(String[] args) throws Exception;
 
-    CommandWithInput(String description) {
+    CommandWithInput(){};
+    CommandWithInput(String description)
+    {
         super(description);
     }
-
     public Output startProcess(String[] args) throws Exception {
         if (args == null) {
             throw new Exception("Этой команде нужен аргумент");
