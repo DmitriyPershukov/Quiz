@@ -43,7 +43,7 @@ public class Telegram extends TelegramLongPollingBot {
         Output getData = new Output();
         try {
             getData = chats.get(user.userId).returnQuizAnswer(message.getText());
-            if(!(getData.text == null) && getData.text != "")
+            if(!(getData.text == null) && getData.text.length() > 0)
             {
                 sendMsg(message, getData);
             }

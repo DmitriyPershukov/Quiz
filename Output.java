@@ -29,6 +29,6 @@ public class Output
         if(input.length != 0)
             text = input[0];
     }
-    public String text = null;
+    public String text = "";
     public String[] possibleAnswers = null;
 }

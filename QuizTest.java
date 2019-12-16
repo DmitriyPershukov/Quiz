@@ -22,7 +22,7 @@ public class QuizTest
 
         assertEquals("База вопросов пуста", quiz.getNewQuestion());
         quiz.modifyQuestionsList(Config.path);
-        for(int i = 0; i < 5; i++)
+        for(int i = 0; i < quiz.questionsList.size(); i++)
         {
             quiz.getNewQuestion();
         }

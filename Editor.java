@@ -46,7 +46,7 @@ class OAQuestionBuilder extends QuestionBuilder
 }
 
 public class Editor {
-    private enum State {
+    public enum State {
         MENU,
         TYPE_OF_QUESTION,
         CREATION_OAQ,
@@ -62,7 +62,6 @@ public class Editor {
             @Override
             Output action(Editor editor) {
                 Output output = new Output();
-                output.possibleAnswers = new String[]{"Готово"};
                 return output;
             }
         });
@@ -192,7 +191,7 @@ public class Editor {
 
     public boolean running = false;
 
-    private State state;
+    public State state;
 
     private QuestionBuilder questionBuilder;
 
@@ -212,7 +211,7 @@ public class Editor {
     public Output parseData(String input) throws Exception {
         Output output = new Output("");
         output = Output.concatinateOutputs(output, inputHandlersUponState.get(state).action(this, input));
-        output = Output.concatinateOutputs(output, actionsUponState.get(state).action(this));
+        if (running) output = Output.concatinateOutputs(output, actionsUponState.get(state).action(this));
         return output;
     }
 
@@ -239,6 +238,10 @@ public class Editor {
                 state = State.PREVIEW;
                 return "Окей\n";
             }
+        }
+        if (text.equals("Отменить")) {
+            state = State.MENU;
+            return "Создание вопроса отменено\n";
         }
 
         if (questionBuilder.question == null) {
